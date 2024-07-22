@@ -1,0 +1,16 @@
+<%- include('layout', { title: '新增時間段' }); %>
+
+<h1>新增時間段</h1>
+<form action="/timeslots/add" method="POST">
+  <div>
+    <label for="start">開始時間:</label>
+    <input type="time" id="start" name="start" required>
+  </div>
+  <div>
+    <label for="end">結束時間:</label>
+    <input type="time" id="end" name="end" required>
+  </div>
+  <button type="submit">新增時間段</button>
+</form>
+
+<a href="/">返回首頁</a>
