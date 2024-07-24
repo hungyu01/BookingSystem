@@ -3,7 +3,7 @@ const router = express.Router();
 const TimeSlot = require('../../models/timeslots');
 
 router.get('/add', (req, res) => {
-  res.render('add-timeslot');
+  res.render('add-timeslot', { title: '新增時間段' });
 });
 
 router.post('/add', async (req, res) => {
