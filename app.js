@@ -1,68 +1,66 @@
-const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
-const logger = require('morgan');
-const expressLayouts = require('express-ejs-layouts');
-const favicon = require('serve-favicon')
-const indexRouter = require('./routes/web/index');
-const spacesRouter = require('./routes/web/spaces');
-const timeslotsRouter = require('./routes/web/timeslots');
-const apiRouter = require('./routes/api/api');
-const MongoStore = require('connect-mongo');
-const { DBHOST, DBPORT, DBNAME } = require('./config/config');
+const mongoose = require('mongoose');
 const session = require('express-session');
-// const usersRouter = require('./routes/web/users');
+const flash = require('connect-flash');
+const passport = require('passport'); // 引入 passport
+const passportConfig = require('./config/passport'); 
+const bodyParser = require('body-parser');
+const expressLayouts = require('express-ejs-layouts');
 
 const app = express();
 
-// Session setup with MongoDB store
-app.use(session({
-  name: 'sid', //設定 cookie 的 name，預設是: connect.sid
-  secret: 'aiml05_02', // 簽名
-  saveUninitialized: false, // 是否在每次請求時都設定一個 cookie 儲存 session id
-  resave: true, //在每次請求後重新保存 session
-  store: MongoStore.create({
-      mongoUrl: `mongodb://${DBHOST}:${DBPORT}/${DBNAME}` //資料庫的連接
-  }),
-  cookie: {
-      httpOnly: true, //開啟後前端不能透過 JS 操作
-      maxAge: 1000 * 60 * 60 * 24 * 7 //控制 session 過期的時間
-  },
-}));
-// view engine setup
+// 配置 passport
+passportConfig(passport);
+
+// 設置視圖路徑和模板引擎
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(expressLayouts);
-app.set('layout', 'layout');
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(favicon(path.join(__dirname,'public/images','favicon.ico')))
-app.use('/public',express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-// app.use('/users', usersRouter);
-app.use('/spaces', spacesRouter);
-app.use('/timeslots', timeslotsRouter);
-app.use('/api', apiRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+// 全局設置變數
+app.use((req, res, next) => {
+  res.locals.title = '空間預約系統'; // 設置全局變數 title
+  res.locals.user = req.user;        // 設置全局變數 user
+  next();
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: 'secret',
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
 
-  // render the error page
+// 連接到 MongoDB
+mongoose.connect('mongodb://localhost/booksystem', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+// 設置路由
+app.use('/', require('./routes/web/index'));
+app.use('/users', require('./routes/web/user'));
+app.use('/api', require('./routes/api/api'));
+
+// 處理 404 錯誤
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+// 錯誤處理中介軟體
+app.use((err, req, res, next) => {
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error', {
+    message: err.message,
+    error: app.get('env') === 'development' ? err : {}
+  });
 });
 
 module.exports = app;

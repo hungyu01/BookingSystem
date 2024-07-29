@@ -1,25 +1,30 @@
 const mongoose = require('mongoose');
 
 const SpaceSchema = new mongoose.Schema({
-    name: String,
+  name: String
 });
 
 const TimeSlotSchema = new mongoose.Schema({
-    start: String,
-    end: String,
+  slot: String
 });
 
 const BookingSchema = new mongoose.Schema({
-    space: { type: mongoose.Schema.Types.ObjectId, ref: 'Space' },
-    timeSlot: { type: mongoose.Schema.Types.ObjectId, ref: 'TimeSlot' },
-    date: Date,
-    name: String,
-    email: String,
-    purpose: String,
+  space: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Space'
+  },
+  timeSlot: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TimeSlot'
+  },
+  name: String,
+  phone: String,
+  email: String,
+  purpose: String
 });
 
-const Space = mongoose.model('Space', SpaceSchema);
-const TimeSlot = mongoose.model('TimeSlot', TimeSlotSchema);
-const Booking = mongoose.model('Booking', BookingSchema);
-
-module.exports = { Space, TimeSlot, Booking };
+module.exports = {
+  Space: mongoose.model('Space', SpaceSchema),
+  TimeSlot: mongoose.model('TimeSlot', TimeSlotSchema),
+  Booking: mongoose.model('Booking', BookingSchema)
+};

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+  <script src="/javascripts/main.js" defer></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+
+    form div {
+      margin-bottom: 15px;
+    } 
+    label {
+      margin-bottom: 5px;
+      display: block;
+      font-weight: bold;
+    }
+    input {
+      /* width: 100%; */
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      color: red;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome, <%= user.username %></h1>
+    <p>This is your dashboard.</p>
+    <!-- Add any other dashboard content here -->
+    <table>
+      <thead>
+        <tr>
+          <th>時間/空間</th>
+          <% timeSlots.forEach(slot => { %>
+            <th><%= slot %></th>
+          <% }); %>
+        </tr>
+      </thead>
+      <tbody>
+        <% spaces.forEach(space => { %>
+          <tr>
+            <td><%= space %></td>
+            <% timeSlots.forEach(slot => { %>
+              <td class="reservation-slot" data-space="<%= space %>" data-time="<%= slot %>">空</td>
+            <% }); %>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <footer>
+    <p>Footer content here</p>
+  </footer>
+</body>
+</html>

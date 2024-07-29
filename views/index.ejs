@@ -1,26 +1,31 @@
 <!DOCTYPE html>
-<html lang="zh-TW"></html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
-    <link rel='stylesheet' href='public/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1>空間預約系統</h1>
-    <div id="booking-table"></div>
-    <div id="booking-form" style="display: none;">
-        <h2>預約表單</h2>
-        <a href="/spaces/add">新增空間</a>
-        <a href="/timeslots/add">新增時間段</a>
-        <form id="booking-form-fields">
-            <input type="text" id="name" placeholder="姓名" required>
-            <input type="email" id="email" placeholder="Email" required>
-            <textarea id="purpose" placeholder="租借空間用途" required></textarea>
-            <button type="submit">提交預約</button>
-        </form>
-    </div>
-    <script src="public/javascripts/main.js"></script>
-  </body>
+<head>
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <link rel="stylesheet" href="/stylesheets/layout.css">
+
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <% if (user) { %>
+          <li><a href="/users/logout">Logout</a></li>
+        <% } else { %>
+          <li><a href="/users/login">Login</a></li>
+          <li><a href="/users/register">Register</a></li>
+        <% } %>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h1>Welcome to 空間預約系統</h1>
+    <p>Use the navigation to access different parts of the system.</p>
+  </main>
+  <footer>
+    <p>Footer content here</p>
+  </footer>
+</body>
 </html>
