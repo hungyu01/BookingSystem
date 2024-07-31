@@ -1,16 +1,26 @@
 const express = require('express');
 const router = express.Router();
+const Profile = require('../../models/ProfileModel');
 const Reservation = require('../../models/ReservationModel');
 
 router.get('/', ensureAuthenticated, (req, res) => {
   res.redirect('/dashboard');
 });
 
-router.get('/dashboard', (req, res) => {
-  const spaces = req.user.spaces || [];
-  const timeRange = req.user.timeRange || '8:00-22:00';
-  const timeSlots = generateTimeSlots(timeRange);
-  res.render('dashboard', { title: 'Dashboard', user: req.user, spaces, timeSlots });
+router.get('/dashboard', ensureAuthenticated, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.render('dashboard', { title: 'Dashboard', user: req.user, spaces: [], timeSlots: [], profile: null, message: 'No profile found. Please set up your profile.' });
+    }
+    const spaces = profile.spaces;
+    const timeRange = profile.timeRange;
+    const timeSlots = generateTimeSlots(timeRange);
+    res.render('dashboard', { title: 'Dashboard', user: req.user, spaces, timeSlots, profile });
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+    res.render('dashboard', { title: 'Dashboard', user: req.user, spaces: [], timeSlots: [], profile: null, message: 'Failed to load profile data.' });
+  }
 });
 
 router.post('/reservations', ensureAuthenticated, async (req, res) => {
@@ -29,12 +39,17 @@ router.get('/profile', (req, res) => {
   res.render('profile', { title: '使用者檔案', message: req.flash('error') });
 });
 
-router.post('/users/profile', async (req, res) => {
+router.post('/profile', async (req, res) => {
   const { spaces, timeRange } = req.body;
   try {
-    req.user.spaces = spaces.split(',');
-    req.user.timeRange = timeRange;
-    await req.user.save();
+    let profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      profile = new Profile({ user: req.user._id, spaces: spaces.split(','), timeRange });
+    } else {
+      profile.spaces = spaces.split(',');
+      profile.timeRange = timeRange;
+    }
+    await profile.save();
     res.redirect('/dashboard');
   } catch (err) {
     res.render('profile', { title: '使用者檔案', message: 'Failed to save profile.' });

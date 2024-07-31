@@ -61,26 +61,33 @@
     <h1>Welcome, <%= user.username %></h1>
     <p>This is your dashboard.</p>
     <!-- Add any other dashboard content here -->
-    <table>
-      <thead>
-        <tr>
-          <th>時間/空間</th>
-          <% timeSlots.forEach(slot => { %>
-            <th><%= slot %></th>
-          <% }); %>
-        </tr>
-      </thead>
-      <tbody>
-        <% spaces.forEach(space => { %>
+    <% if (profile) { %>
+      <table>
+        <thead>
           <tr>
-            <td><%= space %></td>
-            <% timeSlots.forEach(slot => { %>
-              <td class="reservation-slot" data-space="<%= space %>" data-time="<%= slot %>">空</td>
+            <th>Time</th>
+            <% profile.spaces.forEach(space => { %>
+              <th><%= space %></th>
             <% }); %>
           </tr>
-        <% }); %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% 
+            const [start, end] = profile.timeRange.split('-').map(time => parseInt(time.split(':')[0]));
+            for (let hour = start; hour <= end; hour++) { 
+          %>
+            <tr>
+              <td><%= hour %>:00</td>
+              <% profile.spaces.forEach(space => { %>
+                <td class="reservation-slot" data-space="<%= space %>" data-time="<%= hour %>:00"></td>
+              <% }); %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p>No profile data available.</p>
+    <% } %>
   <footer>
     <p>Footer content here</p>
   </footer>

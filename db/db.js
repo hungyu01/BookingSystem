@@ -7,8 +7,8 @@ const mongoose = require('mongoose');
 const {DBHOST, DBPORT, DBNAME} =  require('../config/config');
 
 module.exports = function(success, error) {
-    // 設置 strictQuery 避免開啟時出現警告提醒
-    mongoose.set('strictQuery', true);
+    // 設置 strictQuery 避免開啟時出現警告提醒 
+    // mongoose.set('strictQuery', true); (下一版本已不適用)
 
     if(typeof error !== 'function'){
         //將 error 放在樣板中
@@ -31,7 +31,7 @@ module.exports = function(success, error) {
     });
 
     // 連接關閉的回調
-    mongoose.connection.on('close', () => {
+    mongoose.connection.on('close', (close) => {
         console.log('連接關閉');
     });
 };

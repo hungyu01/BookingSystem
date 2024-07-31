@@ -7,6 +7,7 @@ const passport = require('passport'); // 引入 passport
 const passportConfig = require('./config/passport'); 
 const bodyParser = require('body-parser');
 const expressLayouts = require('express-ejs-layouts');
+const connectDB = require('./db/db');
 
 const app = express();
 
@@ -36,11 +37,11 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-// 連接到 MongoDB
-mongoose.connect('mongodb://localhost/booksystem', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+// 使用 db.js 中的方法連接 MongoDB
+connectDB(
+  () => console.log('MongoDB 連接成功～'),
+  (err) => console.error('MongoDB 連接失敗: ', err)
+);
 
 // 設置路由
 app.use('/', require('./routes/web/index'));
