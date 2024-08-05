@@ -1,73 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
   <link rel="stylesheet" href="/stylesheets/style.css">
+  <link rel="stylesheet" href="/stylesheets/layout.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+  <script src="/javascripts/main.js" defer></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 0;
-      background-color: #f4f4f4;
-    }
-
-    form div {
-      margin-bottom: 15px;
-    } 
-    label {
-      margin-bottom: 5px;
-      display: block;
-      font-weight: bold;
-    }
-    input {
-      /* width: 100%; */
-      padding: 8px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      padding: 10px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .message {
-      color: red;
-      text-align: center;
-    }
-    footer {
-      text-align: center;
-      margin: 0;
+    .space{
+      border: 2px solid rgb(75, 155, 252);
+      border-radius: 3px;
+      margin: 3px;
+      background-color: rgb(182, 211, 255);
+      width: 50%;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>設定空間與時間</h1>
-    <form action="/profile" method="post">
-      <div>
-        <label for="spaces">空間 (以逗號分隔):</label>
-        <input type="text" id="spaces" name="spaces" required>
-      </div>
-      <div>
-        <label for="timeRange">時間範圍 (例如: 8:00-22:00):</label>
-        <input type="text" id="timeRange" name="timeRange" required>
-      </div>
-      <button type="submit">保存</button>
+    <h1><%= title %></h1>
+
+    <!-- Display Spaces -->
+    <h2>Spaces</h2>
+    <ul id="spaces-list">
+      <% if (profile && profile.spaces) { %>
+        <% profile.spaces.forEach(space => { %>
+          <div class="space">
+            <%= space.name %>
+            <button class="delete-space" data-id="<%= space._id %>">Delete</button>
+          </div class="space">
+        <% }); %>
+      <% } else { %>
+        <div class="space">No spaces available</div class="space">
+      <% } %>
+    </ul>
+    <form id="add-space-form" action="/profile" method="post">
+      <input type="text" id="new-space" name="name" placeholder="New space">
+      <button type="submit">Add Space</button>
     </form>
-    <% if (message) { %>
-      <p class="message"><%= message %></p>
-    <% } %>
+
+    <!-- Display Time Range -->
+    <h2>Time Range</h2>
+    <form id="time-range-form" action="/profile/time" method="post">
+      <label for="startTime">Start Time:</label>
+      <input type="text" id="startTime" name="startTime" value="<%= profile ? profile.startTime : '' %>">
+      <label for="endTime">End Time:</label>
+      <input type="text" id="endTime" name="endTime" value="<%= profile ? profile.endTime : '' %>">
+      <button type="submit">Update Time Range</button>
+    </form>
   </div>
 </body>
 </html>

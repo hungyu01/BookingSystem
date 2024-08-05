@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Profile = require('../../models/ProfileModel');
 const Reservation = require('../../models/ReservationModel');
+const ensureAuthenticated = require('../../middleware/auth')
 
 router.get('/', ensureAuthenticated, (req, res) => {
   res.redirect('/dashboard');
@@ -14,7 +15,7 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
       return res.render('dashboard', { title: 'Dashboard', user: req.user, spaces: [], timeSlots: [], profile: null, message: 'No profile found. Please set up your profile.' });
     }
     const spaces = profile.spaces;
-    const timeRange = profile.timeRange;
+    const timeRange = `${profile.startTime}-${profile.endTime}`;
     const timeSlots = generateTimeSlots(timeRange);
     res.render('dashboard', { title: 'Dashboard', user: req.user, spaces, timeSlots, profile });
   } catch (err) {
@@ -34,35 +35,69 @@ router.post('/reservations', ensureAuthenticated, async (req, res) => {
   res.redirect('/dashboard');
 });
 
-// 設定空間與時間 路由配置
-router.get('/profile', (req, res) => {
-  res.render('profile', { title: '使用者檔案', message: req.flash('error') });
+router.get('/profile', ensureAuthenticated, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    res.render('profile', { title: 'User Profile', profile: profile || {} });
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+    res.render('profile', { title: 'User Profile', profile: {} });
+  }
 });
 
-router.post('/profile', async (req, res) => {
-  const { spaces, timeRange } = req.body;
+router.post('/profile', ensureAuthenticated, async (req, res) => {
+  const { name, startTime, endTime } = req.body;
   try {
     let profile = await Profile.findOne({ user: req.user._id });
     if (!profile) {
-      profile = new Profile({ user: req.user._id, spaces: spaces.split(','), timeRange });
+      profile = new Profile({ user: req.user._id, spaces: [{ name }], startTime, endTime });
     } else {
-      profile.spaces = spaces.split(',');
-      profile.timeRange = timeRange;
+      if (name) {
+        profile.spaces.push({ name });
+      }
+      profile.startTime = startTime;
+      profile.endTime = endTime;
     }
     await profile.save();
-    res.redirect('/dashboard');
+    res.redirect('/profile');
   } catch (err) {
-    res.render('profile', { title: '使用者檔案', message: 'Failed to save profile.' });
+    console.error('儲存錯誤:', err);
+    res.render('profile', { title: 'User Profile', profile, message: '儲存時失敗' });
   }
 });
 
-// 帳號驗證方法
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
+router.delete('/profile/spaces/:id', ensureAuthenticated, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.status(404).send('Profile not found.');
+    }
+    profile.spaces = profile.spaces.filter(space => space._id.toString() !== req.params.id);
+    await profile.save();
+    res.send('空間已成功刪除');
+  } catch (err) {
+    console.error('Error deleting space:', err);
+    res.status(500).send('空間刪除失敗');
   }
-  res.redirect('/users/login');
-}
+});
+
+// 更新時間範圍
+router.post('/profile/time', ensureAuthenticated, async (req, res) => {
+  const { startTime, endTime } = req.body;
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.status(404).send('Profile not found.');
+    }
+    profile.startTime = startTime;
+    profile.endTime = endTime;
+    await profile.save();
+    res.redirect('/profile');
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.render('profile', { title: 'User Profile', profile, message: 'Failed to update time range.' });
+  }
+});
 
 // Dashboard 表格的帶入
 function generateTimeSlots(timeRange) {

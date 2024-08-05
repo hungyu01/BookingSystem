@@ -1,43 +1,66 @@
 const express = require('express');
 const router = express.Router();
-const { Space, TimeSlot, Booking } = require('../../models/BookModel');
+const Profile = require('../../models/ProfileModel');
+const Reservation = require('../../models/ReservationModel');
+const ensureAuthenticated = require('../../middleware/auth')
 
-router.get('/spaces', async (req, res) => {
-  const spaces = await Space.find();
-  res.json(spaces);
+// Get profile
+router.get('/profile', ensureAuthenticated, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found.' });
+    }
+    res.json(profile);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch profile.' });
+  }
 });
 
-router.get('/timeslots', async (req, res) => {
-  const timeSlots = await TimeSlot.find();
-  res.json(timeSlots);
+// Add a space
+router.post('/profile/space', ensureAuthenticated, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found.' });
+    }
+    profile.spaces.push({ name: req.body.name });
+    await profile.save();
+    res.json(profile);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add space.' });
+  }
 });
 
-router.post('/bookings', async (req, res) => {
-  const booking = new Booking(req.body);
-  await booking.save();
-  res.json(booking);
+// Delete a space
+router.delete('/profile/space/:id', ensureAuthenticated, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found.' });
+    }
+    profile.spaces.id(req.params.id).remove();
+    await profile.save();
+    res.sendStatus(200);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete space.' });
+  }
 });
 
-router.post('/spaces', async (req, res) => {
-  const space = new Space(req.body);
-  await space.save();
-  res.json(space);
-});
-
-router.post('/timeslots', async (req, res) => {
-  const timeSlot = new TimeSlot(req.body);
-  await timeSlot.save();
-  res.json(timeSlot);
-});
-
-router.delete('/spaces/:id', async (req, res) => {
-  await Space.findByIdAndDelete(req.params.id);
-  res.sendStatus(200);
-});
-
-router.delete('/timeslots/:id', async (req, res) => {
-  await TimeSlot.findByIdAndDelete(req.params.id);
-  res.sendStatus(200);
+// Update time range
+router.post('/profile/time', ensureAuthenticated, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found.' });
+    }
+    profile.startTime = req.body.startTime;
+    profile.endTime = req.body.endTime;
+    await profile.save();
+    res.json(profile);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update time range.' });
+  }
 });
 
 module.exports = router;

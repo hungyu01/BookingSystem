@@ -15,18 +15,12 @@ router.post('/login', passport.authenticate('local', {
   failureFlash: true
 }));
 
-// 登出
-router.get('/logout', (req, res) => {
-  req.logout();
-  res.redirect('/users/login');
-});
-
 // 註冊頁面
 router.get('/register', (req, res) => {
   res.render('register', { title: '空間預約系統', message: req.flash('error') });
 });
 
-// 處理註冊請求
+// 處理註冊請求路由
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -46,6 +40,17 @@ router.post('/register', async (req, res) => {
     req.flash('error', 'User registration failed.');
     res.redirect('/users/register');
   }
+});
+
+// 登出路由
+router.get('/logout', (req, res) => {
+  req.logout(err => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.redirect('/');
+    }
+    res.redirect('/users/login');
+  });
 });
 
 module.exports = router;

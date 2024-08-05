@@ -1,15 +1,34 @@
 const mongoose = require('mongoose');
 
 const ReservationSchema = new mongoose.Schema({
-  space: String,
-  timeSlot: String,
-  name: String,
-  phone: String,
-  email: String,
-  purpose: String,
+  space: {
+    type: String,
+    required: true
+  },
+  timeSlot: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  purpose: {
+    type: String,
+    required: true
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true
   }
 });
 

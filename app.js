@@ -8,6 +8,7 @@ const passportConfig = require('./config/passport');
 const bodyParser = require('body-parser');
 const expressLayouts = require('express-ejs-layouts');
 const connectDB = require('./db/db');
+const favicon = require('serve-favicon')
 
 const app = express();
 
@@ -26,8 +27,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(favicon(path.join(__dirname,'public/images','favicon.ico')))
 app.use(session({
   secret: 'secret',
   resave: false,

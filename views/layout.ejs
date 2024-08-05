@@ -12,8 +12,11 @@
       <ul>
         <li><a href="/" style="color: white;">Home</a></li>
         <li><a href="/profile" style="color: white;">設定時間空間</a></li>
-        <li><a href="/users/login" style="color: white;">Login</a></li>
-        <li><a href="/users/register" style="color: white;">Register</a></li>
+        <% if (user) { %>
+          <li><a href="/users/logout" style="color: white;">Logout</a></li>
+        <% } else { %>
+          <li><a href="/users/register" style="color: white;">Register</a></li>
+        <% } %>
       </ul>
     </nav>
   </header>

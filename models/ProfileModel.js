@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const ProfileSchema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  spaces: { type: [String], required: true },
-  timeRange: { type: String, required: true }
+const ProfileSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  spaces: [{
+    name: String
+  }],
+  startTime: String,
+  endTime: String
 });
 
 module.exports = mongoose.model('Profile', ProfileSchema);
