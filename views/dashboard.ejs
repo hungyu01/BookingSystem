@@ -53,31 +53,42 @@
       padding: 10px;
       text-align: center;
     }
+    .reservation-slot {
+      cursor: pointer;
+    }
+    .reserved {
+      background-color: #007bff;
+      color: white;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Welcome, <%= user.username %></h1>
     <p>This is your dashboard.</p>
+    <label for="reservation-date">Select Date:</label>
+    <input type="date" id="reservation-date" name="reservation-date" value="<%= new Date().toISOString().slice(0, 10) %>">
+
     <% if (profile) { %>
       <table>
         <thead>
           <tr>
             <th>Time</th>
             <% profile.spaces.forEach(space => { %>
-              <th><%= space %></th>
+              <th><%= space.name %></th>
             <% }); %>
           </tr>
         </thead>
         <tbody>
           <% 
-            const [start, end] = profile.timeRange.split('-').map(time => parseInt(time.split(':')[0]));
+            const start = parseInt(profile.startTime.split(':')[0]);
+            const end = parseInt(profile.endTime.split(':')[0]);
             for (let hour = start; hour <= end; hour++) { 
           %>
             <tr>
               <td><%= hour %>:00</td>
               <% profile.spaces.forEach(space => { %>
-                <td class="reservation-slot" data-space="<%= space %>" data-time="<%= hour %>:00"></td>
+                <td class="reservation-slot" data-space="<%= space.name %>" data-time="<%= hour %>:00"></td>
               <% }); %>
             </tr>
           <% } %>
@@ -87,8 +98,83 @@
       <p>No profile data available. Please set up your profile first.</p>
     <% } %>
   </div>
-  <footer>
-    <p>Footer content here</p>
-  </footer>
+
+  <script>
+    document.querySelectorAll('.reservation-slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const date = document.getElementById('reservation-date').value;
+        const space = slot.getAttribute('data-space');
+        const time = slot.getAttribute('data-time');
+        
+        Swal.fire({
+          title: 'Reserve Space',
+          html: `
+            <form id="reservation-form">
+              <label for="username">Name:</label>
+              <input type="text" id="username" name="username" required><br><br>
+              <label for="purpose">Purpose:</label>
+              <input type="text" id="purpose" name="purpose" required>
+            </form>
+          `,
+          showCancelButton: true,
+          confirmButtonText: 'Reserve',
+          preConfirm: () => {
+            const username = document.getElementById('username').value;
+            const purpose = document.getElementById('purpose').value;
+            if (!username || !purpose) {
+              Swal.showValidationMessage('Please enter all fields');
+            }
+            return { username, purpose };
+          }
+        }).then(result => {
+          if (result.isConfirmed) {
+            const { username, purpose } = result.value;
+            fetch('/reserve', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ date, space, time, username, purpose })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                slot.classList.add('reserved');
+                slot.innerHTML = `${username} (${purpose})`;
+                Swal.fire('Success', 'Reservation made successfully', 'success');
+              } else {
+                Swal.fire('Error', data.message, 'error');
+              }
+            });
+          }
+        });
+      });
+    });
+
+    document.getElementById('reservation-date').addEventListener('change', (e) => {
+      const date = e.target.value;
+      fetch(`/reservations?date=${date}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.querySelectorAll('.reservation-slot').forEach(slot => {
+              const space = slot.getAttribute('data-space');
+              const time = slot.getAttribute('data-time');
+              const reservation = data.reservations.find(r => r.space === space && r.time === time);
+              if (reservation) {
+                slot.classList.add('reserved');
+                slot.innerHTML = `${reservation.username} (${reservation.purpose})`;
+              } else {
+                slot.classList.remove('reserved');
+                slot.innerHTML = '';
+              }
+            });
+          }
+        });
+    });
+
+    // Trigger the initial fetch for today's date
+    document.getElementById('reservation-date').dispatchEvent(new Event('change'));
+  </script>
 </body>
 </html>

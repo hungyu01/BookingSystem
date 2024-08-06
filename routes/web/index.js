@@ -24,15 +24,29 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
   }
 });
 
-router.post('/reservations', ensureAuthenticated, async (req, res) => {
-  const { space, timeSlot, name, phone, email, purpose } = req.body;
-  const existingReservation = await Reservation.findOne({ space, timeSlot });
-  if (existingReservation) {
-    return res.status(400).send('Time slot already booked.');
+// 預約空間
+router.post('/reserve', ensureAuthenticated, async (req, res) => {
+  const { date, space, time, username, purpose } = req.body;
+  try {
+    const reservation = new Reservation({ date, space, time, username, purpose, user: req.user._id });
+    await reservation.save();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('預約失敗:', err);
+    res.json({ success: false, message: '預約失敗' });
   }
-  const reservation = new Reservation({ space, timeSlot, name, phone, email, purpose, userId: req.user.id });
-  await reservation.save();
-  res.redirect('/dashboard');
+});
+
+// 獲取特定日期的預約資料
+router.get('/reservations', ensureAuthenticated, async (req, res) => {
+  const { date } = req.query;
+  try {
+    const reservations = await Reservation.find({ date, user: req.user._id });
+    res.json({ success: true, reservations });
+  } catch (err) {
+    console.error('獲取預約資料失敗:', err);
+    res.json({ success: false, message: '獲取預約資料失敗' });
+  }
 });
 
 router.get('/profile', ensureAuthenticated, async (req, res) => {
@@ -50,7 +64,7 @@ router.post('/profile', ensureAuthenticated, async (req, res) => {
   try {
     let profile = await Profile.findOne({ user: req.user._id });
     if (!profile) {
-      profile = new Profile({ user: req.user._id, spaces: [{ name }], startTime, endTime });
+      profile = new Profile({ user: req.user._id, spaces: [], startTime, endTime });
     } else {
       if (name) {
         profile.spaces.push({ name });

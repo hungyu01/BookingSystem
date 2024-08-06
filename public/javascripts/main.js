@@ -1,3 +1,29 @@
+// Function to bind delete event to a button
+function bindDeleteEvent(button) {
+  button.addEventListener('click', async (event) => {
+    const spaceId = event.target.dataset.id;
+    try {
+      const response = await fetch(`/profile/spaces/${spaceId}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        alert('空間已成功刪除');
+        location.reload(); // Refresh the page to reflect the deletion
+      } else {
+        alert('空間刪除失敗');
+      }
+    } catch (error) {
+      alert('刪除空間時發生錯誤');
+    }
+  });
+}
+
+// Bind delete event to all existing delete buttons on page load
+document.querySelectorAll('.delete-space').forEach(button => {
+  bindDeleteEvent(button);
+});
+
+// Handle adding new space
 document.getElementById('add-space').addEventListener('click', async () => {
   const name = document.getElementById('new-space').value;
   if (name) {
@@ -23,30 +49,7 @@ document.getElementById('add-space').addEventListener('click', async () => {
   }
 });
 
-function bindDeleteEvent(button) {
-  button.addEventListener('click', async (event) => {
-    const spaceId = event.target.dataset.id;
-    try {
-      const response = await fetch(`/profile/spaces/${spaceId}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        alert('空間已成功刪除');
-        location.reload();
-      } else {
-        alert('空間刪除失敗');
-      }
-    } catch (error) {
-      alert('刪除空間時發生錯誤');
-    }
-  });
-}
-
-// Initial binding
-document.querySelectorAll('.delete-space').forEach(button => {
-  bindDeleteEvent(button);
-});
-
+// Handle updating time range
 document.getElementById('time-range-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const startTime = document.getElementById('startTime').value;
@@ -62,7 +65,7 @@ document.getElementById('time-range-form').addEventListener('submit', async (e) 
     });
     const data = await response.json();
     if (data.success) {
-      alert('Time range updated successfully.');
+      alert('時間範圍更新成功');
     } else {
       alert(data.message);
     }

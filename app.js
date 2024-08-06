@@ -1,13 +1,14 @@
 const express = require('express');
 const path = require('path');
-const mongoose = require('mongoose');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const flash = require('connect-flash');
 const passport = require('passport'); // 引入 passport
 const passportConfig = require('./config/passport'); 
 const bodyParser = require('body-parser');
 const expressLayouts = require('express-ejs-layouts');
 const connectDB = require('./db/db');
+const {DBHOST, DBPORT, DBNAME} =  require('./config/config');
 const favicon = require('serve-favicon')
 
 const app = express();
@@ -39,6 +40,18 @@ app.use(session({
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
+
+// 設置 session 和 MongoDB 存儲
+app.use(session({
+  secret: 'secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }, // 1 周
+  store: MongoStore.create({
+    mongoUrl: `mongodb://${DBHOST}:${DBPORT}/${DBNAME}`,
+    collectionName: 'sessions'
+  })
+}));
 
 // 使用 db.js 中的方法連接 MongoDB
 connectDB(
