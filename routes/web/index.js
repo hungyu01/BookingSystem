@@ -8,6 +8,7 @@ router.get('/', ensureAuthenticated, (req, res) => {
   res.redirect('/dashboard');
 });
 
+// 首頁路由
 router.get('/dashboard', ensureAuthenticated, async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.user._id });
@@ -26,16 +27,52 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
 
 // 預約空間
 router.post('/reserve', ensureAuthenticated, async (req, res) => {
-  const { date, space, time, username, purpose } = req.body;
+  console.log('Received data:', req.body);  // 檢查接收到的數據
+  const { date, space, startTime, endTime, username, purpose, email } = req.body;
   try {
-    const reservation = new Reservation({ date, space, time, username, purpose, user: req.user._id });
+    const reservation = new Reservation({ 
+      date, 
+      space, 
+      startTime, 
+      endTime, 
+      username, 
+      purpose, 
+      email, 
+      user: req.user._id 
+    });
     await reservation.save();
-    res.json({ success: true });
+    
+    // 發送郵件功能
+    const reservationTime = new Date(`${date}T${startTime}`);
+    const reminderTime = new Date(reservationTime.getTime() - 15 * 60000); // 預約前 15 分鐘
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'your-email@gmail.com',
+        pass: 'your-email-password'
+      }
+    });
+    const mailOptions = {
+      from: 'your-email@gmail.com',
+      to: email,
+      subject: '會議提醒',
+      text: `您好，您的會議將在 15 分鐘後開始，請使用以下鏈接加入會議: http://example.com/meeting/${reservation._id}`
+    };
+    setTimeout(() => {
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          return console.log('Error while sending email:', error);
+        }
+        console.log('Email sent:', info.response);
+      });
+    }, reminderTime - Date.now());
+    res.json({ success: true, message: '預約成功' });
   } catch (err) {
     console.error('預約失敗:', err);
     res.json({ success: false, message: '預約失敗' });
   }
 });
+
 
 // 獲取特定日期的預約資料
 router.get('/reservations', ensureAuthenticated, async (req, res) => {
@@ -86,7 +123,11 @@ router.delete('/profile/spaces/:id', ensureAuthenticated, async (req, res) => {
     if (!profile) {
       return res.status(404).send('Profile not found.');
     }
-    profile.spaces = profile.spaces.filter(space => space._id.toString() !== req.params.id);
+    const spaceIndex = profile.spaces.findIndex(space => space._id.toString() === req.params.id);
+    if (spaceIndex === -1) {
+      return res.status(404).send('Space not found.');
+    }
+    profile.spaces.splice(spaceIndex, 1);
     await profile.save();
     res.send('空間已成功刪除');
   } catch (err) {
@@ -94,6 +135,7 @@ router.delete('/profile/spaces/:id', ensureAuthenticated, async (req, res) => {
     res.status(500).send('空間刪除失敗');
   }
 });
+
 
 // 更新時間範圍
 router.post('/profile/time', ensureAuthenticated, async (req, res) => {

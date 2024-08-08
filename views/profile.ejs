@@ -28,10 +28,10 @@
           <div class="space">
             <%= space.name %>
             <button class="delete-space" data-id="<%= space._id %>">Delete</button>
-          </div class="space">
+          </div>
         <% }); %>
       <% } else { %>
-        <div class="space">No spaces available</div class="space">
+        <div class="space">No spaces available</div>
       <% } %>
     </ul>
     <form action="/profile" method="post">
@@ -50,4 +50,26 @@
     </form>
   </div>
 </body>
+<script>
+  document.querySelectorAll('.delete-space').forEach(button => {
+    button.addEventListener('click', async function() {
+      const spaceId = this.getAttribute('data-id');
+      try {
+        const response = await fetch(`/profile/spaces/${spaceId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          console.error('Failed to delete space');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+  });
+</script>
 </html>

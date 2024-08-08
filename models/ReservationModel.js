@@ -1,5 +1,3 @@
-// models/Reservation.js
-
 const mongoose = require('mongoose');
 
 const ReservationSchema = new mongoose.Schema({
@@ -11,15 +9,23 @@ const ReservationSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  time: {
+  startTime: {
+    type: String,   // 設定預約幾點開始
+    required: true
+  },
+  endTime: {  // 設定預約幾點結束
     type: String,
     required: true
   },
-  username: {
+  username: {   // 預約人名稱
     type: String,
     required: true
   },
   purpose: {
+    type: String,
+    required: true
+  },
+  email: {  // 新增 email 
     type: String,
     required: true
   },

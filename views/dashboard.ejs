@@ -3,8 +3,10 @@
 <head>
   <title><%= title %></title>
   <link rel="stylesheet" href="/stylesheets/style.css">
+  <link rel="stylesheet" href="/stylesheets/dashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
   <script src="/javascripts/main.js" defer></script>
+  <script src="/javascripts/scroll.js" defer></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -65,38 +67,40 @@
 <body>
   <div class="container">
     <h1>Welcome, <%= user.username %></h1>
-    <p>This is your dashboard.</p>
-    <label for="reservation-date">Select Date:</label>
-    <input type="date" id="reservation-date" name="reservation-date" value="<%= new Date().toISOString().slice(0, 10) %>">
-
-    <% if (profile) { %>
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <% profile.spaces.forEach(space => { %>
-              <th><%= space.name %></th>
-            <% }); %>
-          </tr>
-        </thead>
-        <tbody>
-          <% 
-            const start = parseInt(profile.startTime.split(':')[0]);
-            const end = parseInt(profile.endTime.split(':')[0]);
-            for (let hour = start; hour <= end; hour++) { 
-          %>
+    <div class="date-picker">
+      <label for="reservation-date">Select Date:</label>
+      <input type="date" id="reservation-date" value="<%= new Date().toISOString().slice(0, 10) %>">
+    </div>
+    <div class="table-container">
+      <button class="scroll-left">&lt;</button>
+      <div class="table-wrapper">
+        <table>
+          <thead>
             <tr>
-              <td><%= hour %>:00</td>
+              <th>Time</th>
               <% profile.spaces.forEach(space => { %>
-                <td class="reservation-slot" data-space="<%= space.name %>" data-time="<%= hour %>:00"></td>
+                <th><%= space.name %></th>
               <% }); %>
             </tr>
-          <% } %>
-        </tbody>
-      </table>
-    <% } else { %>
-      <p>No profile data available. Please set up your profile first.</p>
-    <% } %>
+          </thead>
+          <tbody>
+            <% 
+              const start = parseInt(profile.startTime.split(':')[0]);
+              const end = parseInt(profile.endTime.split(':')[0]);
+              for (let hour = start; hour <= end; hour++) { 
+            %>
+              <tr>
+                <td><%= hour %>:00</td>
+                <% profile.spaces.forEach(space => { %>
+                  <td class="reservation-slot" data-space="<%= space.name %>" data-time="<%= hour %>:00"></td>
+                <% }); %>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <button class="scroll-right">&gt;</button>
+    </div>    
   </div>
 
   <script>
@@ -110,37 +114,44 @@
           title: 'Reserve Space',
           html: `
             <form id="reservation-form">
-              <label for="username">Name:</label>
+              <label for="username">姓名:</label>
               <input type="text" id="username" name="username" required><br><br>
-              <label for="purpose">Purpose:</label>
-              <input type="text" id="purpose" name="purpose" required>
+              <label for="purpose">標題:</label>
+              <input type="text" id="purpose" name="purpose" required><br><br>
+              <label for="startTime">開始時間:</label>
+              <input type="time" id="startTime" name="startTime" required><br><br>
+              <label for="endTime">結束時間:</label>
+              <input type="time" id="endTime" name="endTime" required>
             </form>
           `,
           showCancelButton: true,
-          confirmButtonText: 'Reserve',
+          confirmButtonText: '預約(Reserve)',
           preConfirm: () => {
             const username = document.getElementById('username').value;
+            console.log('Username:', username); // 檢查 username 是否正確取得
             const purpose = document.getElementById('purpose').value;
-            if (!username || !purpose) {
-              Swal.showValidationMessage('Please enter all fields');
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            if (!username || !purpose || !startTime || !endTime) {
+              Swal.showValidationMessage('請檢查是否填寫完整');
             }
-            return { username, purpose };
+            return { username, purpose, startTime, endTime };
           }
         }).then(result => {
           if (result.isConfirmed) {
-            const { username, purpose } = result.value;
+            const { username, purpose, startTime, endTime } = result.value;
             fetch('/reserve', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({ date, space, time, username, purpose })
+              body: JSON.stringify({ date, space, startTime, endTime, username, purpose })
             })
             .then(response => response.json())
             .then(data => {
               if (data.success) {
                 slot.classList.add('reserved');
-                slot.innerHTML = `${username} (${purpose})`;
+                slot.innerHTML = `${username} (${purpose})<br>${startTime} - ${endTime}`;
                 Swal.fire('Success', 'Reservation made successfully', 'success');
               } else {
                 Swal.fire('Error', data.message, 'error');
@@ -173,7 +184,7 @@
         });
     });
 
-    // Trigger the initial fetch for today's date
+    // 頁面加載後自動觸發日期變更事件
     document.getElementById('reservation-date').dispatchEvent(new Event('change'));
   </script>
 </body>

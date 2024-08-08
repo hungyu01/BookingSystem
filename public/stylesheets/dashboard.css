@@ -1,0 +1,11 @@
+td.reservation-slot {
+    width: 100px; /* 固定欄位寬度 */
+    height: 50px; /* 固定欄位高度 */
+    word-wrap: break-word;
+  }
+  
+  td.reservation-slot.merge {
+    background-color: #007bff; /* 合併的欄位顏色 */
+    color: white;
+  }
+  
